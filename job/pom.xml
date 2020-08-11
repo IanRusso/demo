@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>playingdocker</artifactId>
+        <groupId>groupId</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>job</artifactId>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.12</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+
+        <!-- TESTING DEPENDENCIES -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>playingdocker</finalName>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.irusso.com.irusso.playingdocker.Runner</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase> <!-- bind to the packaging phase -->
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.14.1</version>
+                <configuration>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.hpe.security.fortify.maven.plugin</groupId>
+                <artifactId>sca-maven-plugin</artifactId>
+                <version>17.10</version>
+                <configuration>
+                    <!-- As shown here, when translating an EAR (or any multi-module project for that matter), both buildId and toplevelArtifactId
+                      must be set in the maven-sca-plugin configuration of the parent POM. Use project inheritance to pass these values down to
+                      the modules. (These values may also be provide from the command line but it is recommended that to facilitate repeatable
+                      scans. A note of caution: Do not use ${project.artifactId} as the value for topLevelArtifactId. The expression, not the value,
+                      will be inherited and evaluated by the child project. Currently, this method for translating JSPs only works for WebLogic
+                      10.3. // -->
+                    <buildId>playingdocker</buildId>
+                    <source>1.8</source>
+                    <toplevelArtifactId>schemas</toplevelArtifactId>
+                    <failOnSCAError>true</failOnSCAError>
+                    <Xmx>2000M</Xmx>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.reporting</groupId>
+                        <artifactId>maven-reporting-impl</artifactId>
+                        <version>2.2</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-ear-plugin</artifactId>
+                        <version>2.8</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.hpe.security.fortify.maven.plugin</groupId>
+                        <artifactId>sca-maven-plugin</artifactId>
+                        <version>17.10</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+</project>

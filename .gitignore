@@ -1,0 +1,13 @@
+*/target/
+*.iml
+.idea/
+/rest/${webappDirectory}/
+/docker-output
+/mvn-output
+out/
+gen/
+idea-gitignore.jar
+resources/templates.list
+resources/gitignore/*
+build/
+build.properties
