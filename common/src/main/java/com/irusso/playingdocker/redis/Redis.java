@@ -10,8 +10,8 @@ public class Redis {
 
     private final Jedis jedis;
 
-    public Redis() {
-        this.jedis = new Jedis("localhost");
+    public Redis(String host, int port) {
+        this.jedis = new Jedis(host, port);
         String response = jedis.ping();
         if (response.equals(PONG.name())) {
             System.out.println("Successfully connected to Redis");

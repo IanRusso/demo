@@ -17,11 +17,19 @@ public class Runner {
         System.out.println("Starting up...");
         Properties config = resourceReader.getProperties(CONFIG_PATH);
 
-        OecdReader oecdReader = new OecdReader(config, new Redis());
+        String host;
+        int port;
+        if (args.length > 1) {
+            host = args[0];
+            port = Integer.parseInt(args[1]);
+        } else {
+            host = "localhost";
+            port = 6379;
+        }
+        Redis redis = new Redis(host, port);
 
+        OecdReader oecdReader = new OecdReader(config, redis);
         oecdReader.read();
-
-        Redis redis = new Redis();
 
         System.out.println("Successfully completed run");
     }

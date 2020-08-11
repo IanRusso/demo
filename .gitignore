@@ -2,8 +2,8 @@
 *.iml
 .idea/
 /rest/${webappDirectory}/
-/job/docker-output
-/job/mvn-output
+*/docker-output
+*/mvn-output
 out/
 gen/
 idea-gitignore.jar

@@ -26,10 +26,6 @@
             <param-value>com.irusso.playingdocker.endpoints</param-value>
         </init-param>
         <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.irusso.playingdocker.RestService</param-value>
-        </init-param> 
-        <init-param>
             <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
             <param-value>com.sun.jersey.api.container.filter.LoggingFilter</param-value>
         </init-param>

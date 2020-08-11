@@ -13,6 +13,7 @@
 
 
     <dependencies>
+        <!--LOCAL DEPENDENCIES-->
         <dependency>
             <groupId>groupId</groupId>
             <artifactId>common</artifactId>

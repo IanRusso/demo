@@ -37,8 +37,8 @@ public class OecdReader {
             String countryId = ids[0];
             String varId = ids[1];
             System.out.println(getCountryName(countryId) + " - " + getVarName(varId));
-            v.getObservations().forEach((x,y) -> y.forEach(a -> System.out.println(a + " ")));
-            System.out.println("--------------------\n\n");
+            v.getObservations().forEach((x,y) -> y.forEach(a -> System.out.print(a + " ")));
+            System.out.println("\n");
         });
     }
 
