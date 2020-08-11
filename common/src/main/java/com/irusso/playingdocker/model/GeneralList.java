@@ -1,4 +1,4 @@
-package com.irusso.playingdocker.endpoints;
+package com.irusso.playingdocker.model;
 
 import java.util.List;
 import java.util.Objects;

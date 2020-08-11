@@ -7,6 +7,6 @@
 <title>Error Page</title>
 </head>
 <body>
-<font color="red">Error code: <%=response.getStatus() %></font><br>
+<font color="red">Error Error! CODE => <%=response.getStatus() %></font><br>
 </body>
 </html>

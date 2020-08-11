@@ -4,5 +4,6 @@ call mvn clean install > mvn-output 2>&1
 FINDSTR /L /S /I /N /C:"Failed to execute goal" mvn-output
 ECHO Running Docker build...
 call docker build -t myapi . > docker-output 2>&1
+FINDSTR /L /S /I /N /C:"failed" docker-output
 ECHO Running Docker container: myapi...
 call docker run --rm -it -p 8888:8080 --name api myapi

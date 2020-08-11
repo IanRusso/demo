@@ -1,5 +1,10 @@
 package com.irusso.playingdocker.runnables;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.irusso.playingdocker.constants.DataType;
+import com.irusso.playingdocker.model.display.CountryWealthDataset;
+import com.irusso.playingdocker.model.display.CountryWealthDetails;
 import com.irusso.playingdocker.model.oecd.Data;
 import com.irusso.playingdocker.http.HttpClient;
 import com.irusso.playingdocker.model.oecd.IdNamePair;
@@ -7,14 +12,15 @@ import com.irusso.playingdocker.model.oecd.WealthResponse;
 import com.irusso.playingdocker.redis.Redis;
 import com.irusso.playingdocker.service.OecdService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class OecdReader {
 
-    private static final String CTRY = "CTRY_";
-    private static final String VAR = "VAR_";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Properties config;
     private final OecdService oecdService;
@@ -28,40 +34,63 @@ public class OecdReader {
 
     public void read() {
         WealthResponse response = oecdService.getWealthDistribution();
-        
-        loadCountriesIntoRedis(response);
-        loadVariablesIntoRedis(response);
 
-        response.getDataSets().get(0).getSeries().forEach((k, v) -> {
-            String[] ids = k.split(":");
-            String countryId = ids[0];
-            String varId = ids[1];
-            System.out.println(getCountryName(countryId) + " - " + getVarName(varId));
-            v.getObservations().forEach((x,y) -> y.forEach(a -> System.out.print(a + " ")));
-            System.out.println("\n");
-        });
+        List<String> countryIds = loadCountriesIntoRedis(response);
+        List<String> varIds = loadVariablesIntoRedis(response);
+
+        Map<String, Data> series = response.getDataSets().get(0).getSeries();
+
+        for (String countryId : countryIds) {
+            List<String> keys = series.keySet()
+                .stream()
+                .filter(key -> key.startsWith(countryId))
+                .collect(Collectors.toList());
+
+
+            CountryWealthDetails details = new CountryWealthDetails();
+            details.setCountryName(getCountryName(countryId));
+
+            for (String key : keys) {
+                CountryWealthDataset<List<Object>> dataset = new CountryWealthDataset<>();
+                dataset.setVariableName(getVarName(key.split(":")[1]));
+                dataset.setPopulation("Total Population");
+                dataset.setData(series.get(key).getObservations());
+                details.getDatasets().add(dataset);
+            }
+            try {
+                redis.insert(DataType.DATASET + countryId, objectMapper.writeValueAsString(details));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    private void loadCountriesIntoRedis(WealthResponse response) {
+    private List<String> loadCountriesIntoRedis(WealthResponse response) {
+        List<String> countryIds = new ArrayList<>();
         List<IdNamePair> orderedCountries = response.getStructure().getDimensions().getSeriesList().get(0).getValues();
         for (int countryId = 0; countryId < orderedCountries.size(); countryId++) {
-            redis.insert(CTRY + countryId, orderedCountries.get(countryId).getName());
+            redis.insert(DataType.COUNTRY_NAME + countryId, orderedCountries.get(countryId).getName());
+            countryIds.add(String.valueOf(countryId));
         }
+        return countryIds;
     }
 
-    private void loadVariablesIntoRedis(WealthResponse response) {
+    private List<String> loadVariablesIntoRedis(WealthResponse response) {
+        List<String> varIds = new ArrayList<>();
         List<IdNamePair> variables = response.getStructure().getDimensions().getSeriesList().get(1).getValues();
         for (int varId = 0; varId < variables.size(); varId++) {
-            redis.insert(VAR + varId, variables.get(varId).getName());
+            redis.insert(DataType.VARIABLE_NAME + varId, variables.get(varId).getName());
+            varIds.add(String.valueOf(varId));
         }
+        return varIds;
     }
 
-    private String getCountryName(String varId) {
-        return redis.read(CTRY + varId);
+    private String getCountryName(String countryId) {
+        return redis.read(DataType.COUNTRY_NAME + countryId);
     }
 
     private String getVarName(String varId) {
-        return redis.read(VAR + varId);
+        return redis.read(DataType.VARIABLE_NAME + varId);
     }
 
     private void listByCountry(WealthResponse response) {
