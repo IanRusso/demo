@@ -1,10 +1,12 @@
 package com.irusso.playingdocker;
 
+import com.irusso.playingdocker.constants.RedisConstants;
 import com.irusso.playingdocker.files.ResourceNotFoundException;
 import com.irusso.playingdocker.files.ResourceReader;
 import com.irusso.playingdocker.redis.Redis;
 import com.irusso.playingdocker.runnables.OecdReader;
 
+import java.util.Arrays;
 import java.util.Properties;
 
 public class Runner {
@@ -17,20 +19,21 @@ public class Runner {
         System.out.println("Starting up...");
         Properties config = resourceReader.getProperties(CONFIG_PATH);
 
-        String host;
-        int port;
-        if (args.length > 1) {
-            host = args[0];
-            port = Integer.parseInt(args[1]);
+        Redis redis;
+        String host = System.getenv(RedisConstants.HOST_ENV);
+        int port = Integer.parseInt(System.getenv(RedisConstants.PORT_ENV));
+        if (host == null || port == 0) {
+            System.out.println("Connecting to redis with [host=" + RedisConstants.DEFAULT_HOST
+                + "] and [port=" + RedisConstants.DEFAULT_PORT + "]");
+            redis = new Redis(RedisConstants.DEFAULT_HOST, RedisConstants.DEFAULT_PORT);
         } else {
-            host = "localhost";
-            port = 6379;
+            System.out.println("Connecting to redis with [host=" + host + "] and [port=" + port + "]");
+            redis = new Redis(host, port);
         }
-        Redis redis = new Redis(host, port);
 
         OecdReader oecdReader = new OecdReader(config, redis);
         oecdReader.read();
 
-        System.out.println("Successfully completed run");
+        System.out.println("Exiting Runner.java successfully...");
     }
 }

@@ -36,10 +36,11 @@ public class OecdReader {
         WealthResponse response = oecdService.getWealthDistribution();
 
         List<String> countryIds = loadCountriesIntoRedis(response);
-        List<String> varIds = loadVariablesIntoRedis(response);
+        loadVariablesIntoRedis(response);
 
         Map<String, Data> series = response.getDataSets().get(0).getSeries();
 
+        System.out.println("Loading " + countryIds.size() + " countries into Redis store...");
         for (String countryId : countryIds) {
             List<String> keys = series.keySet()
                 .stream()
@@ -75,14 +76,11 @@ public class OecdReader {
         return countryIds;
     }
 
-    private List<String> loadVariablesIntoRedis(WealthResponse response) {
-        List<String> varIds = new ArrayList<>();
+    private void loadVariablesIntoRedis(WealthResponse response) {
         List<IdNamePair> variables = response.getStructure().getDimensions().getSeriesList().get(1).getValues();
         for (int varId = 0; varId < variables.size(); varId++) {
             redis.insert(DataType.VARIABLE_NAME + varId, variables.get(varId).getName());
-            varIds.add(String.valueOf(varId));
         }
-        return varIds;
     }
 
     private String getCountryName(String countryId) {
