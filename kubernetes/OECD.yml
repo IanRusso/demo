@@ -1,0 +1,134 @@
+#Redis deployment loads an instance of Redis (in-memory key-value datastore)
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: redis
+  labels:
+   app: redis
+   tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: redis
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+        tier: backend
+    spec:
+      containers:
+      - name: redis
+        image: redis
+        resources:
+          requests:
+            cpu: 400m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+---
+#Redis Service exposes Redis to external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+    tier: backend
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+    tier: backend
+---
+#OecdRest Deployment starts up an instance of the OECD REST WAR in a Tomcat Server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oecdrest
+spec:
+  selector:
+    matchLabels:
+      app: oecdrest
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: oecdrest
+    spec:
+      containers:
+      - name: oecdrest
+        image: ianrusso777/oecdrest:latest
+        ports:
+        - containerPort: 8080
+---
+#OecdRest Service exposes OECD REST API to the cluster network
+apiVersion: v1
+kind: Service
+metadata:
+  name: oecdrest-service
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: oecdrest
+---
+#Scheduled Job that pulls Econ data from OECD API and updates Redis store
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name:  oecdjob
+spec: 
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: oecdjob
+            image: ianrusso777/oecdjob
+          restartPolicy: OnFailure
+  suspend: false
+---
+#UI Deployment starts up an instance of the NPM UI Server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+spec:
+  selector:
+    matchLabels:
+      app: ui
+      tier: frontend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ui
+        tier: frontend
+    spec:
+      containers:
+      - name: ui
+        image: ianrusso777/ui:latest
+        ports:
+        - containerPort: 80 #This is the port specified in the Dockerfile for the UI Server
+---
+#UI Service exposes UI to the cluster network
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui-service
+spec:
+  type: NodePort
+  ports:
+  - port: 3000 #Serve to the cluster at this port (public port will be different)
+    protocol: TCP
+    targetPort: 80 #Scan for this port in the services meeting the selector
+  selector:
+    app: ui
