@@ -3,6 +3,7 @@ package com.irusso.playingdocker.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irusso.playingdocker.http.HttpClient;
+import com.irusso.playingdocker.model.oecd.ForestResponse;
 import com.irusso.playingdocker.model.oecd.WealthResponse;
 import org.apache.http.HttpException;
 import org.apache.http.client.methods.HttpGet;
@@ -14,7 +15,8 @@ public class OecdService {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String BASE_URL = "http://stats.oecd.org/SDMX-JSON/data";
-    private static final String WEALTH_DISTRIBUTION_ENDPOINT = "/WEALTH";
+    private static final String WEALTH_DISTRIBUTION_ENDPOINT = "/wealth";
+    private static final String FOREST_RESOURCES_ENDPOINT = "/forest";
 
     private final Properties config;
     private final HttpClient httpClient;
@@ -32,6 +34,17 @@ public class OecdService {
         } catch (HttpException | JsonProcessingException e) {
             e.printStackTrace();
             return new WealthResponse();
+        }
+    }
+
+    public ForestResponse getForestResources() {
+        HttpGet request = new HttpGet(BASE_URL + FOREST_RESOURCES_ENDPOINT);
+        try {
+            String responseContent = httpClient.sendRequest(request);
+            return objectMapper.readValue(responseContent, ForestResponse.class);
+        } catch (HttpException | JsonProcessingException e) {
+            e.printStackTrace();
+            return new ForestResponse();
         }
     }
 }

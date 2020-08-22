@@ -6,7 +6,6 @@ import com.irusso.playingdocker.files.ResourceReader;
 import com.irusso.playingdocker.redis.Redis;
 import com.irusso.playingdocker.runnables.OecdReader;
 
-import java.util.Arrays;
 import java.util.Properties;
 
 public class Runner {
@@ -21,14 +20,14 @@ public class Runner {
 
         Redis redis;
         String host = System.getenv(RedisConstants.HOST_ENV);
-        int port = Integer.parseInt(System.getenv(RedisConstants.PORT_ENV));
-        if (host == null || port == 0) {
+        String port = System.getenv(RedisConstants.PORT_ENV);
+        if (host == null || port == null) {
             System.out.println("Connecting to redis with [host=" + RedisConstants.DEFAULT_HOST
                 + "] and [port=" + RedisConstants.DEFAULT_PORT + "]");
             redis = new Redis(RedisConstants.DEFAULT_HOST, RedisConstants.DEFAULT_PORT);
         } else {
             System.out.println("Connecting to redis with [host=" + host + "] and [port=" + port + "]");
-            redis = new Redis(host, port);
+            redis = new Redis(host, Integer.parseInt(port));
         }
 
         OecdReader oecdReader = new OecdReader(config, redis);

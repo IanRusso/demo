@@ -1,0 +1,1 @@
+*/1 * * * * /usr/local/openjdk-8/jre/bin/java -classpath /playingdocker.jar com.irusso.playingdocker.Runner >> /var/log/cron.log 2>&1

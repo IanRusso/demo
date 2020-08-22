@@ -7,6 +7,7 @@ import com.irusso.playingdocker.model.display.CountryWealthDataset;
 import com.irusso.playingdocker.model.display.CountryWealthDetails;
 import com.irusso.playingdocker.model.oecd.Data;
 import com.irusso.playingdocker.http.HttpClient;
+import com.irusso.playingdocker.model.oecd.ForestResponse;
 import com.irusso.playingdocker.model.oecd.IdNamePair;
 import com.irusso.playingdocker.model.oecd.WealthResponse;
 import com.irusso.playingdocker.redis.Redis;
@@ -33,12 +34,13 @@ public class OecdReader {
     }
 
     public void read() {
-        WealthResponse response = oecdService.getWealthDistribution();
+        WealthResponse wealth = oecdService.getWealthDistribution();
+        ForestResponse forestResources = oecdService.getForestResources();
 
-        List<String> countryIds = loadCountriesIntoRedis(response);
-        loadVariablesIntoRedis(response);
+        List<String> countryIds = loadCountriesIntoRedis(wealth);
+        loadVariablesIntoRedis(wealth);
 
-        Map<String, Data> series = response.getDataSets().get(0).getSeries();
+        Map<String, Data> series = wealth.getDataSets().get(0).getSeries();
 
         System.out.println("Loading " + countryIds.size() + " countries into Redis store...");
         for (String countryId : countryIds) {
