@@ -35,7 +35,7 @@ public class OecdReader {
 
     public void read() {
         WealthResponse wealth = oecdService.getWealthDistribution();
-        ForestResponse forestResources = oecdService.getForestResources();
+        //ForestResponse forestResources = oecdService.getForestResources();
 
         List<String> countryIds = loadCountriesIntoRedis(wealth);
         loadVariablesIntoRedis(wealth);

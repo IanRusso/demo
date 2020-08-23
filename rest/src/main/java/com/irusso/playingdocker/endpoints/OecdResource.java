@@ -3,7 +3,6 @@ package com.irusso.playingdocker.endpoints;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irusso.playingdocker.constants.DataType;
-import com.irusso.playingdocker.constants.RedisConstants;
 import com.irusso.playingdocker.model.GeneralList;
 import com.irusso.playingdocker.model.display.CountryWealthDetails;
 import com.irusso.playingdocker.redis.Redis;
@@ -26,17 +25,7 @@ public class OecdResource {
     private final Redis redis;
 
     public OecdResource() {
-        //this is giving back 172.29.186.113 when the REDIS_SERVICE_HOST var on the server is 10.111.187.84
-        String host = System.getenv(RedisConstants.HOST_ENV);
-        int port = Integer.parseInt(System.getenv(RedisConstants.PORT_ENV));
-        if (host == null || port == 0) {
-            System.out.println("Connecting to redis with [host=" + RedisConstants.DEFAULT_HOST
-                + "] and [port=" + RedisConstants.DEFAULT_PORT + "]");
-            this.redis = new Redis(RedisConstants.DEFAULT_HOST, RedisConstants.DEFAULT_PORT);
-        } else {
-            System.out.println("Connecting to redis with [host=" + host + "] and [port=" + port + "]");
-            this.redis = new Redis(host, port);
-        }
+        this.redis = Redis.newInstance();
     }
     @GET
     public GeneralList<String> getKeys() {

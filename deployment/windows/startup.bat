@@ -1,8 +1,8 @@
 @ECHO OFF
 SETLOCAL
 
-IF NOT "%CD%" == "C:\Users\iruss\git\demo\deployment\docker" (
-   ECHO ERROR SCRIPT MUST BE RUN FROM LOCAL DIRECTORY *e.g. from {repoHome}\deployment\docker
+IF NOT "%CD%" == "C:\Users\iruss\git\demo\deployment\windows" (
+   ECHO ERROR SCRIPT MUST BE RUN FROM LOCAL DIRECTORY *e.g. from {repoHome}\deployment\windows
    goto EXIT
    )
 
@@ -28,7 +28,7 @@ IF NOT "%1"=="skipCompile" (
 IF "%2"=="skipDockerBuilds" (
     ECHO Found option "skipDockerBuilds", skipping docker build process...
 ) ELSE (
-     ECHO Building REST API Docker Image
+     ECHO Building REST API Image
      cd %PROJECT_ROOT%/rest
      call docker build -t oecdrest . > docker-output 2>&1
      FOR /f "tokens=*" %%i IN ('FINDSTR /L /S /I /N /C:"failed" docker-output') DO (
@@ -38,8 +38,9 @@ IF "%2"=="skipDockerBuilds" (
          goto EXIT
          )
 
-     ECHO Building CRON Job Scheduler Docker Image
+     ECHO Building CRON Job Scheduler Image
      cd %PROJECT_ROOT%/job/scheduler
+     COPY ..\target\playingdocker-jar-with-dependencies.jar playingdocker-jar-with-dependencies.jar
      call docker build -t oecdcronjob . > docker-output 2>&1
      FOR /f "tokens=*" %%i IN ('FINDSTR /L /S /I /N /C:"failed" docker-output') DO (
          SET JOB_DOCKER_RESULT=%%i)
@@ -48,7 +49,7 @@ IF "%2"=="skipDockerBuilds" (
          goto EXIT
          )
 
-     ECHO Building UI Docker Image
+     ECHO Building UI Image
      cd %PROJECT_ROOT%/ui
      call docker build -t oecdui . > docker-output 2>&1
      FOR /f "tokens=*" %%i IN ('FINDSTR /L /S /I /N /C:"failed" docker-output') DO (
@@ -62,10 +63,11 @@ IF "%2"=="skipDockerBuilds" (
 cd %HOME%
 
 ECHO Starting Up Docker Images...
+
 call docker run --detach --rm -p 6379:6379 --name redis redis
-call docker run --detach --rm -p 8080:8080 --name oecdrest oecdrest
-call docker run --detach --rm -p 3000:80 --name oecdui oecdui
-call docker run --detach --rm --name oecdcronjob ianrusso777/oecdcronjob
+call docker run --detach --rm --env REDIS_SERVICE_HOST=172.27.128.1 --env REDIS_SERVICE_PORT=6379 -p 8080:8080 --name oecdrest oecdrest
+call docker run --detach --rm --env REDIS_SERVICE_HOST=172.27.128.1 --env REDIS_SERVICE_PORT=6379 -p 3000:80 --name oecdui oecdui
+call docker run --detach --rm --env REDIS_SERVICE_HOST=172.27.128.1 --env REDIS_SERVICE_PORT=6379 --name oecdcronjob oecdcronjob
 
 :EXIT
 

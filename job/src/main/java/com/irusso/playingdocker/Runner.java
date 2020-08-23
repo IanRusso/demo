@@ -1,6 +1,5 @@
 package com.irusso.playingdocker;
 
-import com.irusso.playingdocker.constants.RedisConstants;
 import com.irusso.playingdocker.files.ResourceNotFoundException;
 import com.irusso.playingdocker.files.ResourceReader;
 import com.irusso.playingdocker.redis.Redis;
@@ -14,23 +13,21 @@ public class Runner {
 
     private static final ResourceReader resourceReader = new ResourceReader();
 
+    /**
+     * TODO: maybe I could go through the data and determine what counrties are most likely to experience certain things
+     * e.g.
+     *  - recession
+     *  - revolution
+     *  - coup
+     *  - external conflict
+     * @param args
+     * @throws ResourceNotFoundException
+     */
     public static void main(String[] args) throws ResourceNotFoundException {
         System.out.println("Starting up...");
         Properties config = resourceReader.getProperties(CONFIG_PATH);
 
-        Redis redis;
-        String host = System.getenv(RedisConstants.HOST_ENV);
-        String port = System.getenv(RedisConstants.PORT_ENV);
-        if (host == null || port == null) {
-            System.out.println("Connecting to redis with [host=" + RedisConstants.DEFAULT_HOST
-                + "] and [port=" + RedisConstants.DEFAULT_PORT + "]");
-            redis = new Redis(RedisConstants.DEFAULT_HOST, RedisConstants.DEFAULT_PORT);
-        } else {
-            System.out.println("Connecting to redis with [host=" + host + "] and [port=" + port + "]");
-            redis = new Redis(host, Integer.parseInt(port));
-        }
-
-        OecdReader oecdReader = new OecdReader(config, redis);
+        OecdReader oecdReader = new OecdReader(config, Redis.newInstance());
         oecdReader.read();
 
         System.out.println("Exiting Runner.java successfully...");

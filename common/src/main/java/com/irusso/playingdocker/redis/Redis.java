@@ -1,5 +1,6 @@
 package com.irusso.playingdocker.redis;
 
+import com.irusso.playingdocker.constants.RedisConstants;
 import redis.clients.jedis.Jedis;
 
 import java.util.Set;
@@ -18,6 +19,28 @@ public class Redis {
         } else {
             System.out.println("Unknown response from Redis ping - " + response);
         }
+    }
+
+    public static Redis newInstance() {
+        String host = System.getenv(RedisConstants.HOST_ENV);
+        String portStr = System.getenv(RedisConstants.PORT_ENV);
+
+        if (host == null) {
+            host = RedisConstants.DEFAULT_HOST;
+            System.out.println("Using default host - " + host);
+        } else {
+            System.out.println("Using environment host - " + host);
+        }
+
+        int port;
+        if (portStr == null) {
+            port = RedisConstants.DEFAULT_PORT;
+            System.out.println("Using default port - " + port);
+        } else {
+            System.out.println("Using environment port - " + portStr);
+            port = Integer.parseInt(portStr);
+        }
+        return new Redis(host, port);
     }
 
     public void insert(String k, String v) {

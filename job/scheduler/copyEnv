@@ -1,0 +1,2 @@
+echo export REDIS_SERVICE_HOST=$REDIS_SERVICE_HOST >> /etc/environment;
+echo export REDIS_SERVICE_PORT=$REDIS_SERVICE_PORT >> /etc/environment;
