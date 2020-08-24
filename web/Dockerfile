@@ -3,6 +3,7 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 COPY /ui/package.json ./
 COPY /ui/package-lock.json ./
+RUN ls ./
 RUN npm ci --silent
 RUN npm install react-scripts@3.4.1 -g --silent
 COPY /ui/ ./
