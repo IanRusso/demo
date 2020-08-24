@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import OecdService from './common/services/OecdService';
 
 function App() {
   return (
@@ -16,11 +17,20 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React
+          Learn Test React
+        {displayData()}
         </a>
       </header>
     </div>
   );
+
+  function displayData() {
+    console.log("Attempting to get country names...")
+    OecdService.getCountryNames().then(result => console.log(result)).catch(e => console.log(e)).finally();
+    return "test";
+    //return OecdService.getCountryNames().then().catch().finally();
+}
+  
 }
 
 export default App;
