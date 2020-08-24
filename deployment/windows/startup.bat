@@ -1,7 +1,8 @@
 @ECHO OFF
 SETLOCAL
 
-IF NOT "%CD%" == "C:\Users\iruss\git\demo\deployment\windows" (
+REM If current directory does NOT contain \deployment\windows
+IF x%CD:\deployment\windows=%==x%CD% (
    ECHO ERROR SCRIPT MUST BE RUN FROM LOCAL DIRECTORY *e.g. from {repoHome}\deployment\windows
    goto EXIT
    )
@@ -64,10 +65,17 @@ cd %HOME%
 
 ECHO Starting Up Docker Images...
 
+REM Get the local system IP address and remove spaces
+set ip_address_string="IPv4 Address"
+for /f "usebackq tokens=2 delims=:" %%f in (`ipconfig ^| findstr /c:%ip_address_string%`) do set "REDIS_SERVICE_HOST=%%f"
+set "REDIS_SERVICE_HOST=%REDIS_SERVICE_HOST: =%"
+
+echo Using Local IP = %REDIS_SERVICE_HOST%
+
 call docker run --detach --rm -p 6379:6379 --name redis redis
-call docker run --detach --rm --env REDIS_SERVICE_HOST=172.27.128.1 --env REDIS_SERVICE_PORT=6379 -p 8080:8080 --name oecdrest oecdrest
-call docker run --detach --rm --env REDIS_SERVICE_HOST=172.27.128.1 --env REDIS_SERVICE_PORT=6379 -p 3000:80 --name oecdui oecdui
-call docker run --detach --rm --env REDIS_SERVICE_HOST=172.27.128.1 --env REDIS_SERVICE_PORT=6379 --name oecdcronjob oecdcronjob
+call docker run --detach --rm --env REDIS_SERVICE_HOST --env REDIS_SERVICE_PORT=6379 -p 8080:8080 --name oecdrest oecdrest
+call docker run --detach --rm --env REDIS_SERVICE_HOST --env REDIS_SERVICE_PORT=6379 -p 3000:80 --name oecdui oecdui
+call docker run --detach --rm --env REDIS_SERVICE_HOST --env REDIS_SERVICE_PORT=6379 --name oecdcronjob oecdcronjob
 
 :EXIT
 

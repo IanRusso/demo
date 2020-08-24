@@ -7,4 +7,4 @@ RUN (crontab -l ; echo  "$(cat /etc/cron.d/cronjob)") | crontab -
 RUN touch /var/log/cron.log
 COPY copyEnv /
 RUN chmod +x /copyEnv
-CMD /copyEnv & cron & tail -f /var/log/cron.log
+CMD /copyEnv; cron; tail -f /var/log/cron.log
