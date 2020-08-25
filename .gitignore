@@ -13,15 +13,15 @@ build/
 build.properties
 
 # dependencies
-/ui/node_modules
-/ui/.pnp
-.pnp.js
+*/node_modules
+*/.pnp
+*.pnp.js
 
 # testing
-/ui/coverage
+*/coverage
 
 # production
-/ui/build
+*/build
 
 # misc
 .DS_Store
@@ -30,6 +30,6 @@ build.properties
 .env.test.local
 .env.production.local
 
-/ui/npm-debug.log*
-/ui/yarn-debug.log*
-/ui/yarn-error.log*
+*/ui/npm-debug.log*
+*/ui/yarn-debug.log*
+*/ui/yarn-error.log*

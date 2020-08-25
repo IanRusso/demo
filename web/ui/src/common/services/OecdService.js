@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 //need to proxy these requests to http://172.29.186.113:8080
-const OECD_REST = "http://172.29.186.113:8080/rest/oecd";
+const OECD_REST = "/rest/oecd";
 const COUNTRY_NAMES = "/countryNames";
 const VARIABLE_NAMES = "/variableNames";
 const DATASETS = "/datasets";
