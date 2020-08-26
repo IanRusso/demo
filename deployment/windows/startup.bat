@@ -44,7 +44,7 @@ IF "%2" == "skipDockerBuild" (
 )
 ECHO Building Web Image
 cd %PROJECT_ROOT%/web
-call docker build -t oecdweb .
+call docker build -t oecdweb . > docker-output 2>&1
 FOR /f "tokens=*" %%i IN ('FINDSTR /L /S /I /N /C:"Failed" docker-output') DO (
     SET API_DOCKER_RESULT=%%i)
 IF NOT "%API_DOCKER_RESULT%"=="" (

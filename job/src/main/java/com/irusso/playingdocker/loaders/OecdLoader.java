@@ -1,25 +1,28 @@
-package com.irusso.playingdocker.runnables;
+package com.irusso.playingdocker.loaders;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.irusso.playingdocker.constants.DataType;
+import com.irusso.playingdocker.constants.WealthVariables;
+import com.irusso.playingdocker.model.display.EconomicReport;
 import com.irusso.playingdocker.model.display.CountryWealthDataset;
 import com.irusso.playingdocker.model.display.CountryWealthDetails;
 import com.irusso.playingdocker.model.oecd.Data;
 import com.irusso.playingdocker.http.HttpClient;
-import com.irusso.playingdocker.model.oecd.ForestResponse;
 import com.irusso.playingdocker.model.oecd.IdNamePair;
 import com.irusso.playingdocker.model.oecd.WealthResponse;
+import com.irusso.playingdocker.readers.OecdReader;
 import com.irusso.playingdocker.redis.Redis;
 import com.irusso.playingdocker.service.OecdService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-public class OecdReader {
+public class OecdLoader {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -27,22 +30,63 @@ public class OecdReader {
     private final OecdService oecdService;
     private final Redis redis;
 
-    public OecdReader(Properties config, Redis redis) {
+    public OecdLoader(Properties config, Redis redis) {
         this.config = config;
         this.oecdService = new OecdService(config, new HttpClient());
         this.redis = redis;
     }
 
-    public void read() {
-        WealthResponse wealth = oecdService.getWealthDistribution();
+    public void updateRedis() {
+        WealthResponse wealthResponse = oecdService.getWealthDistribution();
         //ForestResponse forestResources = oecdService.getForestResources();
 
-        List<String> countryIds = loadCountriesIntoRedis(wealth);
-        loadVariablesIntoRedis(wealth);
+        List<String> countryIds = loadCountriesIntoRedis(wealthResponse);
+        loadVariablesIntoRedis(wealthResponse);
+        Map<String, EconomicReport> economicReports = getEconomicReportForCountries(wealthResponse, countryIds);
+        economicReports.forEach((k,v) -> {
+            try {
+                redis.insert(DataType.DISPLAY_DATA + k,objectMapper.writeValueAsString(v));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        });
+    }
 
-        Map<String, Data> series = wealth.getDataSets().get(0).getSeries();
+    private Map<String, EconomicReport> getEconomicReportForCountries(WealthResponse wealthResponse,
+                                                                      List<String> countryIds) {
+        Map<String, EconomicReport> reports = new HashMap<>();
+        for (String countryId : countryIds) {
+            Map<Integer, Double> wealthInOnePercent = OecdReader.readVariableForCountry(
+                wealthResponse, countryId, WealthVariables.WEALTH_IN_TOP_ONE_PERCENT, redis);
 
-        System.out.println("Loading " + countryIds.size() + " countries into Redis store...");
+            Map<Integer, Double> wealthInFivePercent = OecdReader.readVariableForCountry(
+                wealthResponse, countryId, WealthVariables.WEALTH_IN_TOP_FIVE_PERCENT, redis);
+
+            Map<Integer, Double> wealthInTenPercent = OecdReader.readVariableForCountry(
+                wealthResponse, countryId, WealthVariables.WEALTH_IN_TOP_TEN_PERCENT, redis);
+
+            Map<Integer, Double> indebtedHouseholds = OecdReader.readVariableForCountry(
+                wealthResponse, countryId, WealthVariables.INDEBTED_HOUSEHOLDS, redis);
+
+
+            reports.put(getCountryName(countryId), new EconomicReport(wealthInOnePercent,
+                wealthInFivePercent, wealthInTenPercent, indebtedHouseholds));
+        }
+        return reports;
+    }
+
+    private List<String> loadCountriesIntoRedis(WealthResponse response) {
+        List<String> countryIds = new ArrayList<>();
+        List<IdNamePair> orderedCountries = response.getStructure().getDimensions().getSeriesList().get(0).getValues();
+        for (int countryId = 0; countryId < orderedCountries.size(); countryId++) {
+            redis.insert(DataType.COUNTRY_NAME + countryId, orderedCountries.get(countryId).getName());
+            countryIds.add(String.valueOf(countryId));
+        }
+        return countryIds;
+    }
+
+    private void loadDatasetsIntoRedis(WealthResponse wealthResponse, List<String> countryIds) {
+        Map<String, Data> series = wealthResponse.getDataSets().get(0).getSeries();
         for (String countryId : countryIds) {
             List<String> keys = series.keySet()
                 .stream()
@@ -66,16 +110,6 @@ public class OecdReader {
                 e.printStackTrace();
             }
         }
-    }
-
-    private List<String> loadCountriesIntoRedis(WealthResponse response) {
-        List<String> countryIds = new ArrayList<>();
-        List<IdNamePair> orderedCountries = response.getStructure().getDimensions().getSeriesList().get(0).getValues();
-        for (int countryId = 0; countryId < orderedCountries.size(); countryId++) {
-            redis.insert(DataType.COUNTRY_NAME + countryId, orderedCountries.get(countryId).getName());
-            countryIds.add(String.valueOf(countryId));
-        }
-        return countryIds;
     }
 
     private void loadVariablesIntoRedis(WealthResponse response) {

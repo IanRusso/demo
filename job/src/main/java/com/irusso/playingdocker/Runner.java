@@ -3,7 +3,7 @@ package com.irusso.playingdocker;
 import com.irusso.playingdocker.files.ResourceNotFoundException;
 import com.irusso.playingdocker.files.ResourceReader;
 import com.irusso.playingdocker.redis.Redis;
-import com.irusso.playingdocker.runnables.OecdReader;
+import com.irusso.playingdocker.loaders.OecdLoader;
 
 import java.util.Properties;
 
@@ -27,8 +27,8 @@ public class Runner {
         System.out.println("Starting up...");
         Properties config = resourceReader.getProperties(CONFIG_PATH);
 
-        OecdReader oecdReader = new OecdReader(config, Redis.newInstance());
-        oecdReader.read();
+        OecdLoader oecdReader = new OecdLoader(config, Redis.newInstance());
+        oecdReader.updateRedis();
 
         System.out.println("Exiting Runner.java successfully...");
     }
